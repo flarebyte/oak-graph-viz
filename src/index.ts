@@ -1,43 +1,53 @@
-interface Taggable {
-  tagSet: string[];
+interface TextStyle {
+
 }
 
-interface AttributeMetadata extends Taggable {
-  id: string;
-  name: string;
-  alternateName: string;
-  unitText: string;
-  tagSet: string[];
+interface Rectangle {
+  x: number;
+  y:number;
+  width: number;
+  height: number;
 }
 
-interface Attribute extends Taggable {
-  id: string;
-  value: string;
-  optionalValueList: string[];
-  tagSet: string[];
+interface Ellipse {
+  cx: number;
+  cy:number;
+  rx: number;
+  ry: number;
 }
 
-interface WithAttributeList {
-  attributeList: Attribute[];
+type Shape = Rectangle | Ellipse
+
+interface TextElement {
+  id: number;
+  text: string;
+  style: TextStyle;
 }
 
-interface Node extends WithAttributeList {
-  id: string;
-  attributeList: Attribute[];
+interface AttributeElement {
+  id: number;
+  textElements: TextElement[];
 }
 
-interface Edge extends WithAttributeList {
-  fromNode: string;
-  toNode: string;
-  attributeList: Attribute[];
+interface Node {
+  id: number;
+  attributes: AttributeElement[];
+  shape: Shape;
 }
 
-interface Graph {
-  attributeMetadataList: AttributeMetadata[];
+interface Edge  {
+  id: number;
+  fromNode: number;
+  toNode: number;
+  attributes: AttributeElement[];
+  shape: Shape;
+}
+
+interface GraphElement {
   nodeList: Node[];
   edgeList: Edge[];
 }
 
-const parseAsGraph = (content: string): Graph => JSON.parse(content);
+const parseAsGraph = (content: string): GraphElement => JSON.parse(content);
 
 export { parseAsGraph };

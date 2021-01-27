@@ -53,19 +53,24 @@ interface TextElement {
   styleId: number;
 }
 
-interface AttributeElement {
+interface Block {
   id: number;
   textElements: TextElement[];
   outline: Rectangle;
   styleId: number;
 }
 
-interface Node {
+interface Section {
   id: number;
-  attributeList: AttributeElement[];
+  blocks: Block[];
   outline: Shape;
   anchors: Anchor[];
   styleId: number;
+}
+
+interface Node {
+  id: number;
+  section: Section;
 }
 
 interface Edge {
@@ -74,7 +79,7 @@ interface Edge {
   toNode: number;
   fromNodeAnchor: number;
   toNodeAnchor: number;
-  attributeList: AttributeElement[];
+  blocks: Block[];
   outline: Shape;
   anchors: Anchor[];
   styleId: number;
@@ -82,7 +87,7 @@ interface Edge {
 
 interface Explanation {
   id: number;
-  attributeList: AttributeElement[];
+  blocks: Block[];
   outline: Shape;
   anchors: Anchor[];
   styleId: number;
@@ -96,13 +101,13 @@ interface GraphFrame {
 }
 
 interface GraphElement {
-  stylistParamList: StylistParam[];
-  stylistList: Stylist[];
-  styleList: Style[];
-  explanationList: Explanation[];
-  nodeList: Node[];
-  edgeList: Edge[];
-  frameList: GraphFrame[];
+  stylistParams: StylistParam[];
+  stylists: Stylist[];
+  styles: Style[];
+  explanations: Explanation[];
+  nodes: Node[];
+  edges: Edge[];
+  frames: GraphFrame[];
 }
 
 const parseAsGraph = (content: string): GraphElement => JSON.parse(content);

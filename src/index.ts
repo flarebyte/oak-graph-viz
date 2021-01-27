@@ -1,51 +1,99 @@
-interface TextStyle {
+interface StylistParam {
+  id: number;
+  name: string;
+  defaults: number[];
+  minItems: number;
+  maxItems: number;
+}
 
+interface StylistParamValue {
+  paramId: number;
+  values: number[];
+}
+
+interface Stylist {
+  id: number;
+  name: string;
+  version: string;
+  paramIds: number[];
+}
+
+interface Style {
+  stylistId: number;
+  values: StylistParamValue[];
+}
+
+interface Point {
+  x: number;
+  y: number;
+}
+
+interface Anchor {
+  point: Point;
 }
 
 interface Rectangle {
-  x: number;
-  y:number;
+  point: Point;
   width: number;
   height: number;
 }
 
 interface Ellipse {
-  cx: number;
-  cy:number;
+  center: Point;
   rx: number;
   ry: number;
 }
 
-type Shape = Rectangle | Ellipse
+type Shape = Rectangle | Ellipse;
 
 interface TextElement {
   id: number;
   text: string;
-  style: TextStyle;
+  outline: Rectangle;
+  styleId: number;
 }
 
 interface AttributeElement {
   id: number;
   textElements: TextElement[];
+  outline: Rectangle;
+  styleId: number;
 }
 
 interface Node {
   id: number;
-  attributes: AttributeElement[];
-  shape: Shape;
+  attributeList: AttributeElement[];
+  outline: Shape;
+  anchors: Anchor[];
+  styleId: number;
 }
 
-interface Edge  {
+interface Edge {
   id: number;
   fromNode: number;
   toNode: number;
-  attributes: AttributeElement[];
-  shape: Shape;
+  fromNodeAnchor: number;
+  toNodeAnchor: number;
+  attributeList: AttributeElement[];
+  outline: Shape;
+  anchors: Anchor[];
+  styleId: number;
+}
+
+interface GraphFrame {
+  page: number;
+  outline: Shape;
 }
 
 interface GraphElement {
+  stylistParamList: StylistParam[];
+  stylistList: Stylist[];
+  styleList: Style[];
+  styleId: number;
+  general: AttributeElement[];
   nodeList: Node[];
   edgeList: Edge[];
+  frameList: GraphFrame[];
 }
 
 const parseAsGraph = (content: string): GraphElement => JSON.parse(content);

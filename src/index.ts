@@ -80,17 +80,26 @@ interface Edge {
   styleId: number;
 }
 
+interface Explanation {
+  id: number;
+  attributeList: AttributeElement[];
+  outline: Shape;
+  anchors: Anchor[];
+  styleId: number;
+}
+
 interface GraphFrame {
   page: number;
   outline: Shape;
+  anchors: Anchor[];
+  styleId: number;
 }
 
 interface GraphElement {
   stylistParamList: StylistParam[];
   stylistList: Stylist[];
   styleList: Style[];
-  styleId: number;
-  general: AttributeElement[];
+  explanationList: Explanation[];
   nodeList: Node[];
   edgeList: Edge[];
   frameList: GraphFrame[];

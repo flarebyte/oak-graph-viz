@@ -60,54 +60,46 @@ interface Block {
   styleId: number;
 }
 
-interface Section {
+interface Group {
   id: number;
+  outline: Shape;
+  anchors: Anchor[];
+  styleId: number;
+}
+
+enum EntityKind {
+  NodeEntity,
+  EdgeEntity,
+  ExplanationEntity
+}
+interface Entity {
+  id: number;
+  group: Group;
   blocks: Block[];
-  outline: Shape;
-  anchors: Anchor[];
-  styleId: number;
+  kind: EntityKind;
 }
 
-interface Node {
+
+interface Relationship {
   id: number;
-  section: Section;
+  fromEntityId: number;
+  toEntityId: number;
+  fromAnchorId: number;
+  toAnchorId: number;
 }
 
-interface Edge {
+interface GraphView {
   id: number;
-  fromNode: number;
-  toNode: number;
-  fromNodeAnchor: number;
-  toNodeAnchor: number;
-  blocks: Block[];
-  outline: Shape;
-  anchors: Anchor[];
-  styleId: number;
-}
-
-interface Explanation {
-  id: number;
-  blocks: Block[];
-  outline: Shape;
-  anchors: Anchor[];
-  styleId: number;
-}
-
-interface GraphFrame {
-  page: number;
-  outline: Shape;
-  anchors: Anchor[];
-  styleId: number;
+  group: Group;
 }
 
 interface GraphElement {
   stylistParams: StylistParam[];
   stylists: Stylist[];
   styles: Style[];
-  explanations: Explanation[];
-  nodes: Node[];
-  edges: Edge[];
-  frames: GraphFrame[];
+  entities: Entity[];
+  relationships: Relationship[];
+  views: GraphView[];
 }
 
 const parseAsGraph = (content: string): GraphElement => JSON.parse(content);

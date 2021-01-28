@@ -70,7 +70,7 @@ interface Group {
 enum EntityKind {
   NodeEntity,
   EdgeEntity,
-  ExplanationEntity
+  ExplanationEntity,
 }
 interface Entity {
   id: number;
@@ -78,7 +78,6 @@ interface Entity {
   blocks: Block[];
   kind: EntityKind;
 }
-
 
 interface Relationship {
   id: number;
@@ -103,5 +102,35 @@ interface GraphElement {
 }
 
 const parseAsGraph = (content: string): GraphElement => JSON.parse(content);
+
+class GraphBuilder {
+  stylistParamIdCounter: number = 0;
+  stylistIdCounter: number = 0;
+  graphElement: GraphElement = {
+    stylistParams: [],
+    stylists: [],
+    styles: [],
+    entities: [],
+    relationships: [],
+    views: [],
+  };
+  constructor() {}
+
+  createStylistParam(
+    name: string,
+    defaults: number[],
+    minItems: number,
+    maxItems: number
+  ): StylistParam {
+    const param: StylistParam = {
+      id: this.stylistParamIdCounter++,
+      name,
+      defaults,
+      minItems,
+      maxItems,
+    };
+    return param;
+  }
+}
 
 export { parseAsGraph };

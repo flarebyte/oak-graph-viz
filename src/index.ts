@@ -114,7 +114,6 @@ class GraphBuilder {
     relationships: [],
     views: [],
   };
-  constructor() {}
 
   createStylistParam(
     name: string,
@@ -129,8 +128,55 @@ class GraphBuilder {
       minItems,
       maxItems,
     };
+    this.graphElement.stylistParams.push(param);
     return param;
+  }
+
+  createStylist(
+    name: string,
+    version: string,
+    params: StylistParam[]
+  ): Stylist {
+    const sylist: Stylist = {
+      id: this.stylistIdCounter++,
+      name,
+      version,
+      paramIds: params.map(p => p.id),
+    };
+    this.graphElement.stylists.push(sylist);
+    return sylist;
+  }
+
+  createStyle(stylist: Stylist, values: StylistParamValue[]): Style {
+    const style: Style = {
+      stylistId: stylist.id,
+      values,
+    };
+    this.graphElement.styles.push(style);
+    return style;
+  }
+
+  createStylistParamValue(
+    param: StylistParam,
+    values: number[]
+  ): StylistParamValue {
+    const length = values.length;
+    if (values.length < param.minItems) {
+      throw new Error(
+        `${param.name} ${param.id} should have at least ${param.minItems} values but got ${length}`
+      );
+    }
+    if (values.length > param.maxItems) {
+      throw new Error(
+        `${param.name} ${param.id} should have no more than ${param.maxItems} values but got ${length}`
+      );
+    }
+    const stylistParamValue: StylistParamValue = {
+      paramId: param.id,
+      values,
+    };
+    return stylistParamValue;
   }
 }
 
-export { parseAsGraph };
+export { parseAsGraph, GraphBuilder };

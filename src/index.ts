@@ -11,6 +11,11 @@ interface StylistParamValue {
   values: number[];
 }
 
+interface ExactStylistParamValue {
+  param: StylistParam;
+  values: number[];
+}
+
 interface Stylist {
   id: number;
   name: string;
@@ -156,26 +161,29 @@ class GraphBuilder {
     return style;
   }
 
-  createStylistParamValue(
-    param: StylistParam,
-    values: number[]
-  ): StylistParamValue {
-    const length = values.length;
-    if (values.length < param.minItems) {
+  createStylistParamValues(prm: ExactStylistParamValue): StylistParamValue {
+    const length = prm.values.length;
+    if (prm.values.length < prm.param.minItems) {
       throw new Error(
-        `${param.name} ${param.id} should have at least ${param.minItems} values but got ${length}`
+        `${prm.param.name} ${prm.param.id} should have at least ${prm.param.minItems} values but got ${length}`
       );
     }
-    if (values.length > param.maxItems) {
+    if (prm.values.length > prm.param.maxItems) {
       throw new Error(
-        `${param.name} ${param.id} should have no more than ${param.maxItems} values but got ${length}`
+        `${prm.param.name} ${prm.param.id} should have no more than ${prm.param.maxItems} values but got ${length}`
       );
     }
     const stylistParamValue: StylistParamValue = {
-      paramId: param.id,
-      values,
+      paramId: prm.param.id,
+      values: prm.values,
     };
     return stylistParamValue;
+  }
+
+  createStylistParamValueList(
+    params: { param: StylistParam; values: number[] }[]
+  ): StylistParamValue[] {
+    return params.map(this.createStylistParamValues);
   }
 }
 

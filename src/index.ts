@@ -11,11 +11,6 @@ interface StylistParamValue {
   values: number[];
 }
 
-interface ExactStylistParamValue {
-  param: StylistParam;
-  values: number[];
-}
-
 interface Stylist {
   id: number;
   name: string;
@@ -24,6 +19,7 @@ interface Stylist {
 }
 
 interface Style {
+  id: number;
   stylistId: number;
   values: StylistParamValue[];
 }
@@ -31,10 +27,6 @@ interface Style {
 interface Point {
   x: number;
   y: number;
-}
-
-interface Anchor {
-  point: Point;
 }
 
 interface Rectangle {
@@ -66,9 +58,8 @@ interface Block {
 }
 
 interface Group {
-  id: number;
   outline: Shape;
-  anchors: Anchor[];
+  anchors: Point[];
   styleId: number;
 }
 
@@ -108,9 +99,69 @@ interface GraphElement {
 
 const parseAsGraph = (content: string): GraphElement => JSON.parse(content);
 
+class ParamValueBuilder {
+  paramValues: StylistParamValue[] = [];
+  add(param: StylistParam, values: number[]) {
+    const length = values.length;
+    if (values.length < param.minItems) {
+      throw new Error(
+        `${param.name} ${param.id} should have at least ${param.minItems} values but got ${length}`
+      );
+    }
+    if (values.length > param.maxItems) {
+      throw new Error(
+        `${param.name} ${param.id} should have no more than ${param.maxItems} values but got ${length}`
+      );
+    }
+    const stylistParamValue: StylistParamValue = {
+      paramId: param.id,
+      values: values,
+    };
+    this.paramValues.push(stylistParamValue);
+    return this;
+  }
+  add1(param: StylistParam, value: number) {
+    return this.add(param, [value]);
+  }
+  add2(param: StylistParam, value1: number, value2: number) {
+    return this.add(param, [value1, value2]);
+  }
+  asStylistParamValueList(): StylistParamValue[] {
+    return this.paramValues;
+  }
+}
+
+class ShapeBuilder {
+  createPoint(x: number, y: number): Point {
+    return { x, y };
+  }
+  createRectangle(point: Point, width: number, height: number): Rectangle {
+    return { point, width, height };
+  }
+  createEllipse(center: Point, rx: number, ry: number): Ellipse {
+    return { center, rx, ry };
+  }
+
+  createGroup(outline: Shape, anchors: Point[], style: Style): Group {
+    return { outline, anchors, styleId: style.id };
+  }
+}
+
+const shapeBuilder = new ShapeBuilder();
+const noShape: Rectangle = shapeBuilder.createRectangle(
+  shapeBuilder.createPoint(0, 0),
+  0,
+  0
+);
+const noGroup: Group = shapeBuilder.createGroup(NoShape);
+
 class GraphBuilder {
   stylistParamIdCounter: number = 0;
   stylistIdCounter: number = 0;
+  styleIdCounter: number = 0;
+  textElementIdCounter: number = 0;
+  blockIdCounter: number = 0;
+  entityIdCounter: number = 0;
   graphElement: GraphElement = {
     stylistParams: [],
     stylists: [],
@@ -154,37 +205,64 @@ class GraphBuilder {
 
   createStyle(stylist: Stylist, values: StylistParamValue[]): Style {
     const style: Style = {
+      id: this.styleIdCounter++,
       stylistId: stylist.id,
       values,
     };
     this.graphElement.styles.push(style);
     return style;
   }
+}
 
-  createStylistParamValues(prm: ExactStylistParamValue): StylistParamValue {
-    const length = prm.values.length;
-    if (prm.values.length < prm.param.minItems) {
-      throw new Error(
-        `${prm.param.name} ${prm.param.id} should have at least ${prm.param.minItems} values but got ${length}`
-      );
-    }
-    if (prm.values.length > prm.param.maxItems) {
-      throw new Error(
-        `${prm.param.name} ${prm.param.id} should have no more than ${prm.param.maxItems} values but got ${length}`
-      );
-    }
-    const stylistParamValue: StylistParamValue = {
-      paramId: prm.param.id,
-      values: prm.values,
-    };
-    return stylistParamValue;
+class BlockBuilder {
+  graphBuilder: GraphBuilder;
+  textElements: TextElement[] = [];
+  styleId: number = 0;
+  outline: Rectangle = NoShape;
+  constructor(graphBuilder: GraphBuilder) {
+    this.graphBuilder = graphBuilder;
   }
 
-  createStylistParamValueList(
-    params: { param: StylistParam; values: number[] }[]
-  ): StylistParamValue[] {
-    return params.map(this.createStylistParamValues);
+  addText(text: string, outline: Rectangle, style: Style) {
+    const textElement: TextElement = {
+      id: this.graphBuilder.textElementIdCounter++,
+      text,
+      outline,
+      styleId: style.id,
+    };
+    this.textElements.push(textElement);
+    return this;
+  }
+
+  setStyle(style: Style) {
+    this.styleId = style.id;
+    return this;
+  }
+
+  setOutline(outline: Rectangle) {
+    this.outline = outline;
+    return this;
+  }
+
+  asBlock(): Block {
+    const block: Block = {
+      id: this.graphBuilder.blockIdCounter++,
+      textElements: this.textElements,
+      outline: this.outline,
+      styleId: this.styleId,
+    };
+    return block;
   }
 }
 
-export { parseAsGraph, GraphBuilder };
+class EntityBuilder {
+  graphBuilder: GraphBuilder;
+  group: Group;
+  blocks: Block[] = [];
+  kind: EntityKind = EntityKind.NodeEntity;
+  constructor(graphBuilder: GraphBuilder) {
+    this.graphBuilder = graphBuilder;
+  }
+}
+
+export { parseAsGraph, ParamValueBuilder, GraphBuilder, BlockBuilder };

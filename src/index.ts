@@ -24,6 +24,11 @@ interface Style {
   values: StylistParamValue[];
 }
 
+interface Layer {
+  id: number;
+  name: string;
+}
+
 interface Point {
   x: number;
   y: number;
@@ -43,36 +48,19 @@ interface Ellipse {
 
 type Shape = Rectangle | Ellipse;
 
-interface TextElement {
+interface TextLike {
   id: number;
   text: string;
-  outline: Rectangle;
-  styleId: number;
 }
 
-interface Block {
+interface Element {
   id: number;
-  textElements: TextElement[];
   outline: Rectangle;
-  styleId: number;
-}
-
-interface Group {
-  outline: Shape;
   anchors: Point[];
   styleId: number;
-}
-
-enum EntityKind {
-  NodeEntity,
-  EdgeEntity,
-  ExplanationEntity,
-}
-interface Entity {
-  id: number;
-  group: Group;
-  blocks: Block[];
-  kind: EntityKind;
+  layerId: number;
+  entityId: number;
+  values: StylistParamValue[];
 }
 
 interface Relationship {
@@ -85,19 +73,23 @@ interface Relationship {
 
 interface GraphView {
   id: number;
-  group: Group;
+  outline: Shape;
+  anchors: Point[];
+  styleId: number;
 }
 
-interface GraphElement {
+interface VisualGraph {
+  texts: TextLike[];
+  layers: Layer[];
   stylistParams: StylistParam[];
   stylists: Stylist[];
   styles: Style[];
-  entities: Entity[];
+  elements: Element[];
   relationships: Relationship[];
   views: GraphView[];
 }
 
-const parseAsGraph = (content: string): GraphElement => JSON.parse(content);
+const parseAsGraph = (content: string): VisualGraph => JSON.parse(content);
 
 class ParamValueBuilder {
   paramValues: StylistParamValue[] = [];
@@ -141,10 +133,6 @@ class ShapeBuilder {
   createEllipse(center: Point, rx: number, ry: number): Ellipse {
     return { center, rx, ry };
   }
-
-  createGroup(outline: Shape, anchors: Point[], style: Style): Group {
-    return { outline, anchors, styleId: style.id };
-  }
 }
 
 const shapeBuilder = new ShapeBuilder();
@@ -153,7 +141,6 @@ const noShape: Rectangle = shapeBuilder.createRectangle(
   0,
   0
 );
-const noGroup: Group = shapeBuilder.createGroup(NoShape);
 
 class GraphBuilder {
   stylistParamIdCounter: number = 0;
@@ -162,7 +149,8 @@ class GraphBuilder {
   textElementIdCounter: number = 0;
   blockIdCounter: number = 0;
   entityIdCounter: number = 0;
-  graphElement: GraphElement = {
+  VisualGraph: VisualGraph = {
+    texts: [],
     stylistParams: [],
     stylists: [],
     styles: [],
@@ -184,7 +172,7 @@ class GraphBuilder {
       minItems,
       maxItems,
     };
-    this.graphElement.stylistParams.push(param);
+    this.VisualGraph.stylistParams.push(param);
     return param;
   }
 
@@ -199,7 +187,7 @@ class GraphBuilder {
       version,
       paramIds: params.map(p => p.id),
     };
-    this.graphElement.stylists.push(sylist);
+    this.VisualGraph.stylists.push(sylist);
     return sylist;
   }
 
@@ -209,60 +197,16 @@ class GraphBuilder {
       stylistId: stylist.id,
       values,
     };
-    this.graphElement.styles.push(style);
+    this.VisualGraph.styles.push(style);
     return style;
   }
 }
 
-class BlockBuilder {
+class ElementBuilder {
   graphBuilder: GraphBuilder;
-  textElements: TextElement[] = [];
-  styleId: number = 0;
-  outline: Rectangle = NoShape;
-  constructor(graphBuilder: GraphBuilder) {
-    this.graphBuilder = graphBuilder;
-  }
-
-  addText(text: string, outline: Rectangle, style: Style) {
-    const textElement: TextElement = {
-      id: this.graphBuilder.textElementIdCounter++,
-      text,
-      outline,
-      styleId: style.id,
-    };
-    this.textElements.push(textElement);
-    return this;
-  }
-
-  setStyle(style: Style) {
-    this.styleId = style.id;
-    return this;
-  }
-
-  setOutline(outline: Rectangle) {
-    this.outline = outline;
-    return this;
-  }
-
-  asBlock(): Block {
-    const block: Block = {
-      id: this.graphBuilder.blockIdCounter++,
-      textElements: this.textElements,
-      outline: this.outline,
-      styleId: this.styleId,
-    };
-    return block;
-  }
-}
-
-class EntityBuilder {
-  graphBuilder: GraphBuilder;
-  group: Group;
-  blocks: Block[] = [];
-  kind: EntityKind = EntityKind.NodeEntity;
   constructor(graphBuilder: GraphBuilder) {
     this.graphBuilder = graphBuilder;
   }
 }
 
-export { parseAsGraph, ParamValueBuilder, GraphBuilder, BlockBuilder };
+export { parseAsGraph, ParamValueBuilder, GraphBuilder };

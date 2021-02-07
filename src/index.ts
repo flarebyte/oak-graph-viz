@@ -34,19 +34,19 @@ interface Point {
   y: number;
 }
 
-interface Rectangle {
-  point: Point;
-  width: number;
-  height: number;
+interface withPoints {
+  points: Point[];
 }
 
-interface Ellipse {
+interface Polygon extends withPoints {}
+
+interface Ellipse extends withPoints {
   center: Point;
   rx: number;
   ry: number;
 }
 
-type Shape = Rectangle | Ellipse;
+type Shape = Polygon | Ellipse;
 
 interface TextLike {
   id: number;
@@ -55,7 +55,7 @@ interface TextLike {
 
 interface Element {
   id: number;
-  outline: Rectangle;
+  outline: Shape;
   anchors: Point[];
   styleId: number;
   layerId: number;
@@ -154,7 +154,7 @@ class GraphBuilder {
     stylistParams: [],
     stylists: [],
     styles: [],
-    entities: [],
+    elements: [],
     relationships: [],
     views: [],
   };

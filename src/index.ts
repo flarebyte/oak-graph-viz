@@ -1,13 +1,24 @@
-interface StylistParam {
+interface NumberLike {
+  name: string;
+  minimum: number;
+  maximum: number;
+}
+
+interface Structure {
+  id: number;
+  items: NumberLike[];
+}
+
+interface FeatureDef {
   id: number;
   name: string;
-  defaults: number[];
+  structureId: number;
   minItems: number;
   maxItems: number;
 }
 
-interface StylistParamValue {
-  paramId: number;
+interface Feature {
+  featureDefId: number;
   values: number[];
 }
 
@@ -15,13 +26,13 @@ interface Stylist {
   id: number;
   name: string;
   version: string;
-  paramIds: number[];
+  featureDefIds: number[];
 }
 
 interface Style {
   id: number;
   stylistId: number;
-  values: StylistParamValue[];
+  features: Feature[];
 }
 
 interface Layer {
@@ -60,13 +71,13 @@ interface Element {
   styleId: number;
   layerId: number;
   entityId: number;
-  values: StylistParamValue[];
+  features: Feature[];
 }
 
 interface Relationship {
   id: number;
-  fromEntityId: number;
-  toEntityId: number;
+  fromElementId: number;
+  toElementId: number;
   fromAnchorId: number;
   toAnchorId: number;
 }
@@ -74,14 +85,13 @@ interface Relationship {
 interface GraphView {
   id: number;
   outline: Shape;
-  anchors: Point[];
-  styleId: number;
 }
 
 interface VisualGraph {
   texts: TextLike[];
   layers: Layer[];
-  stylistParams: StylistParam[];
+  structures: Structure[];
+  featureDefs: FeatureDef[];
   stylists: Stylist[];
   styles: Style[];
   elements: Element[];
@@ -91,9 +101,9 @@ interface VisualGraph {
 
 const parseAsGraph = (content: string): VisualGraph => JSON.parse(content);
 
-class ParamValueBuilder {
-  paramValues: StylistParamValue[] = [];
-  add(param: StylistParam, values: number[]) {
+class FeatureBuilder {
+  features: Feature[] = [];
+  add(param: FeatureDef, values: number[]) {
     const length = values.length;
     if (values.length < param.minItems) {
       throw new Error(
@@ -105,21 +115,21 @@ class ParamValueBuilder {
         `${param.name} ${param.id} should have no more than ${param.maxItems} values but got ${length}`
       );
     }
-    const stylistParamValue: StylistParamValue = {
-      paramId: param.id,
+    const feature: Feature = {
+      featureDefId: param.id,
       values: values,
     };
-    this.paramValues.push(stylistParamValue);
+    this.features.push(feature);
     return this;
   }
-  add1(param: StylistParam, value: number) {
+  add1(param: FeatureDef, value: number) {
     return this.add(param, [value]);
   }
-  add2(param: StylistParam, value1: number, value2: number) {
+  add2(param: FeatureDef, value1: number, value2: number) {
     return this.add(param, [value1, value2]);
   }
-  asStylistParamValueList(): StylistParamValue[] {
-    return this.paramValues;
+  asFeatureList(): Feature[] {
+    return this.features;
   }
 }
 
@@ -143,7 +153,7 @@ const noShape: Rectangle = shapeBuilder.createRectangle(
 );
 
 class GraphBuilder {
-  stylistParamIdCounter: number = 0;
+  featureDefIdCounter: number = 0;
   stylistIdCounter: number = 0;
   styleIdCounter: number = 0;
   textElementIdCounter: number = 0;
@@ -151,7 +161,7 @@ class GraphBuilder {
   entityIdCounter: number = 0;
   VisualGraph: VisualGraph = {
     texts: [],
-    stylistParams: [],
+    params: [],
     stylists: [],
     styles: [],
     elements: [],
@@ -159,39 +169,39 @@ class GraphBuilder {
     views: [],
   };
 
-  createStylistParam(
+  createFeatureDef(
     name: string,
     defaults: number[],
     minItems: number,
     maxItems: number
-  ): StylistParam {
-    const param: StylistParam = {
-      id: this.stylistParamIdCounter++,
+  ): FeatureDef {
+    const param: FeatureDef = {
+      id: this.featureDefIdCounter++,
       name,
       defaults,
       minItems,
       maxItems,
     };
-    this.VisualGraph.stylistParams.push(param);
+    this.VisualGraph.params.push(param);
     return param;
   }
 
   createStylist(
     name: string,
     version: string,
-    params: StylistParam[]
+    params: FeatureDef[]
   ): Stylist {
     const sylist: Stylist = {
       id: this.stylistIdCounter++,
       name,
       version,
-      paramIds: params.map(p => p.id),
+      featureDefIds: params.map(p => p.id),
     };
     this.VisualGraph.stylists.push(sylist);
     return sylist;
   }
 
-  createStyle(stylist: Stylist, values: StylistParamValue[]): Style {
+  createStyle(stylist: Stylist, values: Feature[]): Style {
     const style: Style = {
       id: this.styleIdCounter++,
       stylistId: stylist.id,
@@ -209,4 +219,4 @@ class ElementBuilder {
   }
 }
 
-export { parseAsGraph, ParamValueBuilder, GraphBuilder };
+export { parseAsGraph, FeatureBuilder, GraphBuilder };

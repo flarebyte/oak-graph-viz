@@ -35,6 +35,33 @@ interface Aspect {
   name: string;
 }
 
+interface Blending {
+  id: number;
+  name: string;
+}
+
+interface HSLAColor {
+  h: number;
+  s: number;
+  l: number;
+  a: number;
+}
+
+interface RGBAColor {
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+}
+
+type ColorValue = HSLAColor | RGBAColor
+
+interface Color {
+  id: number;
+  name: string;
+  value: ColorValue
+}
+
 interface Point {
   x: number;
   y: number;
@@ -53,6 +80,7 @@ interface Element {
   styleId: number;
   layerId: number;
   aspectIds: number[];
+  blendingId: number;
   entityId: number;
   features: Feature[];
 }
@@ -76,6 +104,8 @@ interface VisualGraph {
   texts: TextLike[];
   layers: Layer[];
   aspects: Aspect[];
+  blendings: Blending[];
+  colors: Color[];
   featureDefs: FeatureDef[];
   stylists: Stylist[];
   styles: Style[];
@@ -132,6 +162,8 @@ class GraphBuilder {
     featureDefs: [],
     stylists: [],
     styles: [],
+    blendings: [],
+    colors: [],
     elements: [],
     relationships: [],
     views: [],

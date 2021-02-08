@@ -1,24 +1,14 @@
-interface NumberLike {
-  name: string;
-  minimum: number;
-  maximum: number;
-}
-
-interface Structure {
-  id: number;
-  items: NumberLike[];
-}
-
 interface FeatureDef {
   id: number;
   name: string;
-  structureId: number;
+  minimum: number;
+  maximum: number;
   minItems: number;
   maxItems: number;
 }
 
 interface Feature {
-  featureDefId: number;
+  defId: number;
   values: number[];
 }
 
@@ -40,24 +30,15 @@ interface Layer {
   name: string;
 }
 
+interface Aspect {
+  id: number;
+  name: string;
+}
+
 interface Point {
   x: number;
   y: number;
 }
-
-interface withPoints {
-  points: Point[];
-}
-
-interface Polygon extends withPoints {}
-
-interface Ellipse extends withPoints {
-  center: Point;
-  rx: number;
-  ry: number;
-}
-
-type Shape = Polygon | Ellipse;
 
 interface TextLike {
   id: number;
@@ -66,10 +47,12 @@ interface TextLike {
 
 interface Element {
   id: number;
-  outline: Shape;
+  center: Point;
+  outline: Point[];
   anchors: Point[];
   styleId: number;
   layerId: number;
+  aspectIds: number[];
   entityId: number;
   features: Feature[];
 }
@@ -84,13 +67,15 @@ interface Relationship {
 
 interface GraphView {
   id: number;
-  outline: Shape;
+  topRight: Point;
+  bottomLeft: Point;
+  pageRatio: number;
 }
 
 interface VisualGraph {
   texts: TextLike[];
   layers: Layer[];
-  structures: Structure[];
+  aspects: Aspect[];
   featureDefs: FeatureDef[];
   stylists: Stylist[];
   styles: Style[];
@@ -116,7 +101,7 @@ class FeatureBuilder {
       );
     }
     const feature: Feature = {
-      featureDefId: param.id,
+      defId: param.id,
       values: values,
     };
     this.features.push(feature);
@@ -133,25 +118,6 @@ class FeatureBuilder {
   }
 }
 
-class ShapeBuilder {
-  createPoint(x: number, y: number): Point {
-    return { x, y };
-  }
-  createRectangle(point: Point, width: number, height: number): Rectangle {
-    return { point, width, height };
-  }
-  createEllipse(center: Point, rx: number, ry: number): Ellipse {
-    return { center, rx, ry };
-  }
-}
-
-const shapeBuilder = new ShapeBuilder();
-const noShape: Rectangle = shapeBuilder.createRectangle(
-  shapeBuilder.createPoint(0, 0),
-  0,
-  0
-);
-
 class GraphBuilder {
   featureDefIdCounter: number = 0;
   stylistIdCounter: number = 0;
@@ -161,7 +127,9 @@ class GraphBuilder {
   entityIdCounter: number = 0;
   VisualGraph: VisualGraph = {
     texts: [],
-    params: [],
+    layers: [],
+    aspects: [],
+    featureDefs: [],
     stylists: [],
     styles: [],
     elements: [],
@@ -171,18 +139,20 @@ class GraphBuilder {
 
   createFeatureDef(
     name: string,
-    defaults: number[],
     minItems: number,
-    maxItems: number
+    maxItems: number,
+    minimum: number,
+    maximum: number,
   ): FeatureDef {
     const param: FeatureDef = {
       id: this.featureDefIdCounter++,
       name,
-      defaults,
       minItems,
       maxItems,
+      minimum,
+      maximum
     };
-    this.VisualGraph.params.push(param);
+    this.VisualGraph.featureDefs.push(param);
     return param;
   }
 
@@ -201,11 +171,11 @@ class GraphBuilder {
     return sylist;
   }
 
-  createStyle(stylist: Stylist, values: Feature[]): Style {
+  createStyle(stylist: Stylist, features: Feature[]): Style {
     const style: Style = {
       id: this.styleIdCounter++,
       stylistId: stylist.id,
-      values,
+      features,
     };
     this.VisualGraph.styles.push(style);
     return style;

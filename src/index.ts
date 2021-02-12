@@ -159,6 +159,7 @@ class GraphBuilder {
   colorIdCounter: number = 0;
   elementIdCounter: number = 0;
   relationshipIdCounter: number = 0;
+  viewIdCounter: number = 0;
   visualGraph: VisualGraph = {
     texts: [],
     layers: [],
@@ -274,6 +275,16 @@ class GraphBuilder {
   addElement(element: Element) {
     this.visualGraph.elements.push(element);
     return element;
+  }
+  addView(topRight: Point, bottomLeft: Point, pageRatio: number) {
+    const view: GraphView = {
+      id: this.viewIdCounter++,
+      topRight,
+      bottomLeft,
+      pageRatio,
+    };
+    this.visualGraph.views.push(view);
+    return view;
   }
 }
 

@@ -54,12 +54,12 @@ interface RGBAColor {
   a: number;
 }
 
-type ColorValue = HSLAColor | RGBAColor
+type ColorValue = HSLAColor | RGBAColor;
 
 interface Color {
   id: number;
   name: string;
-  value: ColorValue
+  value: ColorValue;
 }
 
 interface Point {
@@ -152,9 +152,12 @@ class GraphBuilder {
   featureDefIdCounter: number = 0;
   stylistIdCounter: number = 0;
   styleIdCounter: number = 0;
-  textElementIdCounter: number = 0;
-  blockIdCounter: number = 0;
-  entityIdCounter: number = 0;
+  textIdCounter: number = 0;
+  layerIdCounter: number = 0;
+  aspectIdCounter: number = 0;
+  blendingIdCounter: number = 0;
+  colorIdCounter: number = 0;
+  elementIdCounter: number = 0;
   VisualGraph: VisualGraph = {
     texts: [],
     layers: [],
@@ -174,7 +177,7 @@ class GraphBuilder {
     minItems: number,
     maxItems: number,
     minimum: number,
-    maximum: number,
+    maximum: number
   ): FeatureDef {
     const param: FeatureDef = {
       id: this.featureDefIdCounter++,
@@ -182,17 +185,13 @@ class GraphBuilder {
       minItems,
       maxItems,
       minimum,
-      maximum
+      maximum,
     };
     this.VisualGraph.featureDefs.push(param);
     return param;
   }
 
-  createStylist(
-    name: string,
-    version: string,
-    params: FeatureDef[]
-  ): Stylist {
+  createStylist(name: string, version: string, params: FeatureDef[]): Stylist {
     const sylist: Stylist = {
       id: this.stylistIdCounter++,
       name,
@@ -212,13 +211,105 @@ class GraphBuilder {
     this.VisualGraph.styles.push(style);
     return style;
   }
+
+  createText(text: string): TextLike {
+    const textLike: TextLike = {
+      id: this.textIdCounter++,
+      text,
+    };
+    this.VisualGraph.texts.push(textLike);
+    return textLike;
+  }
+
+  createLayer(name: string): Layer {
+    const layer: Layer = {
+      id: this.layerIdCounter++,
+      name,
+    };
+    this.VisualGraph.layers.push(layer);
+    return layer;
+  }
+  createAspect(name: string): Aspect {
+    const aspect: Aspect = {
+      id: this.aspectIdCounter++,
+      name,
+    };
+    this.VisualGraph.aspects.push(aspect);
+    return aspect;
+  }
+  createBlending(name: string): Blending {
+    const blending: Blending = {
+      id: this.blendingIdCounter++,
+      name,
+    };
+    this.VisualGraph.blendings.push(blending);
+    return blending;
+  }
+  createColor(name: string, value: ColorValue): Color {
+    const color: Color = {
+      id: this.colorIdCounter++,
+      name,
+      value,
+    };
+    this.VisualGraph.colors.push(color);
+    return color;
+  }
 }
 
 class ElementBuilder {
   graphBuilder: GraphBuilder;
+  element: Element;
   constructor(graphBuilder: GraphBuilder) {
     this.graphBuilder = graphBuilder;
+    this.element = {
+      id: this.graphBuilder.elementIdCounter++,
+      center: { x: 0, y: 0 },
+      outline: [],
+      anchors: [],
+      styleId: 0,
+      layerId: 0,
+      aspectIds: [],
+      blendingId: 0,
+      entityId: 0,
+      features: [],
+    };
+  }
+  setCenter(point: Point) {
+    this.element.center = point;
+    return this;
+  }
+  addOutlinePoint(point: Point) {
+    this.element.outline.push(point);
+    return this;
+  }
+  addAnchor(point: Point) {
+    this.element.anchors.push(point);
+    return this;
+  }
+  setStyle(style: Style) {
+    this.element.styleId = style.id;
+    return this;
+  }
+  setLayer(layer: Layer) {
+    this.element.layerId = layer.id;
+    return this;
+  }
+  setBlending(blending: Blending) {
+    this.element.blendingId = blending.id;
+    return this;
+  }
+  setEntityId(entityId: number) {
+    this.element.entityId = entityId;
+    return this;
+  }
+  addAspect(aspect: Aspect) {
+    this.element.aspectIds.push(aspect.id);
+    return this;
+  }
+  addFeature(featureDef: FeatureDef, values: number[]) {
+    this.element.features.push({ defId: featureDef.id, values });
+    return this;
   }
 }
 
-export { parseAsGraph, FeatureBuilder, GraphBuilder };
+export { parseAsGraph, FeatureBuilder, GraphBuilder, ElementBuilder };

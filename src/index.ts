@@ -89,8 +89,8 @@ interface Relationship {
   id: number;
   fromElementId: number;
   toElementId: number;
-  fromAnchorId: number;
-  toAnchorId: number;
+  fromAnchor: Point;
+  toAnchor: Point;
 }
 
 interface GraphView {
@@ -158,7 +158,8 @@ class GraphBuilder {
   blendingIdCounter: number = 0;
   colorIdCounter: number = 0;
   elementIdCounter: number = 0;
-  VisualGraph: VisualGraph = {
+  relationshipIdCounter: number = 0;
+  visualGraph: VisualGraph = {
     texts: [],
     layers: [],
     aspects: [],
@@ -187,7 +188,7 @@ class GraphBuilder {
       minimum,
       maximum,
     };
-    this.VisualGraph.featureDefs.push(param);
+    this.visualGraph.featureDefs.push(param);
     return param;
   }
 
@@ -198,7 +199,7 @@ class GraphBuilder {
       version,
       featureDefIds: params.map(p => p.id),
     };
-    this.VisualGraph.stylists.push(sylist);
+    this.visualGraph.stylists.push(sylist);
     return sylist;
   }
 
@@ -208,7 +209,7 @@ class GraphBuilder {
       stylistId: stylist.id,
       features,
     };
-    this.VisualGraph.styles.push(style);
+    this.visualGraph.styles.push(style);
     return style;
   }
 
@@ -217,7 +218,7 @@ class GraphBuilder {
       id: this.textIdCounter++,
       text,
     };
-    this.VisualGraph.texts.push(textLike);
+    this.visualGraph.texts.push(textLike);
     return textLike;
   }
 
@@ -226,7 +227,7 @@ class GraphBuilder {
       id: this.layerIdCounter++,
       name,
     };
-    this.VisualGraph.layers.push(layer);
+    this.visualGraph.layers.push(layer);
     return layer;
   }
   createAspect(name: string): Aspect {
@@ -234,7 +235,7 @@ class GraphBuilder {
       id: this.aspectIdCounter++,
       name,
     };
-    this.VisualGraph.aspects.push(aspect);
+    this.visualGraph.aspects.push(aspect);
     return aspect;
   }
   createBlending(name: string): Blending {
@@ -242,7 +243,7 @@ class GraphBuilder {
       id: this.blendingIdCounter++,
       name,
     };
-    this.VisualGraph.blendings.push(blending);
+    this.visualGraph.blendings.push(blending);
     return blending;
   }
   createColor(name: string, value: ColorValue): Color {
@@ -251,8 +252,28 @@ class GraphBuilder {
       name,
       value,
     };
-    this.VisualGraph.colors.push(color);
+    this.visualGraph.colors.push(color);
     return color;
+  }
+  addRelationship(
+    from: Element,
+    to: Element,
+    fromAnchor: Point,
+    toAnchor: Point
+  ): Relationship {
+    const relationship: Relationship = {
+      id: this.relationshipIdCounter++,
+      fromElementId: from.id,
+      toElementId: to.id,
+      fromAnchor,
+      toAnchor,
+    };
+    this.visualGraph.relationships.push(relationship);
+    return relationship;
+  }
+  addElement(element: Element) {
+    this.visualGraph.elements.push(element);
+    return element;
   }
 }
 
@@ -309,6 +330,9 @@ class ElementBuilder {
   addFeature(featureDef: FeatureDef, values: number[]) {
     this.element.features.push({ defId: featureDef.id, values });
     return this;
+  }
+  asElement(): Element {
+    return this.element;
   }
 }
 

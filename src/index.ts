@@ -102,6 +102,10 @@ interface Relationship {
   toElementId: number;
   fromAnchor: Point;
   toAnchor: Point;
+  styleId: number;
+  layerId: number;
+  aspectIds: number[];
+  blendingId: number;
 }
 
 interface GraphView {
@@ -292,25 +296,13 @@ class GraphBuilder {
     return resLink;
   }
 
-  addRelationship(
-    from: Element,
-    to: Element,
-    fromAnchor: Point,
-    toAnchor: Point
-  ): Relationship {
-    const relationship: Relationship = {
-      id: this.relationshipIdCounter++,
-      fromElementId: from.id,
-      toElementId: to.id,
-      fromAnchor,
-      toAnchor,
-    };
-    this.visualGraph.relationships.push(relationship);
-    return relationship;
-  }
   addElement(element: Element) {
     this.visualGraph.elements.push(element);
     return element;
+  }
+  addRelationship(relationship: Relationship) {
+    this.visualGraph.relationships.push(relationship);
+    return relationship;
   }
   addView(topRight: Point, bottomLeft: Point, pageRatio: number) {
     const view: GraphView = {
@@ -383,4 +375,65 @@ class ElementBuilder {
   }
 }
 
-export { parseAsGraph, FeatureBuilder, GraphBuilder, ElementBuilder };
+class RelationshipBuilder {
+  graphBuilder: GraphBuilder;
+  relationship: Relationship;
+  constructor(graphBuilder: GraphBuilder) {
+    this.graphBuilder = graphBuilder;
+    this.relationship = {
+      id: this.graphBuilder.relationshipIdCounter++,
+      fromElementId: 0,
+      toElementId: 0,
+      fromAnchor: { x: 0, y: 0 },
+      toAnchor: { x: 0, y: 0 },
+      styleId: 0,
+      layerId: 0,
+      blendingId: 0,
+      aspectIds: [],
+    };
+  }
+  setToAnchor(point: Point) {
+    this.relationship.toAnchor = point;
+    return this;
+  }
+  setFromAnchor(point: Point) {
+    this.relationship.fromAnchor = point;
+    return this;
+  }
+
+  setStyle(style: Style) {
+    this.relationship.styleId = style.id;
+    return this;
+  }
+  setLayer(layer: Layer) {
+    this.relationship.layerId = layer.id;
+    return this;
+  }
+  setBlending(blending: Blending) {
+    this.relationship.blendingId = blending.id;
+    return this;
+  }
+  setFromEntityId(entityId: number) {
+    this.relationship.fromElementId = entityId;
+    return this;
+  }
+  setToEntityId(entityId: number) {
+    this.relationship.toElementId = entityId;
+    return this;
+  }
+  addAspect(aspect: Aspect) {
+    this.relationship.aspectIds.push(aspect.id);
+    return this;
+  }
+  asRelationship(): Relationship {
+    return this.relationship;
+  }
+}
+
+export {
+  parseAsGraph,
+  FeatureBuilder,
+  GraphBuilder,
+  ElementBuilder,
+  RelationshipBuilder,
+};

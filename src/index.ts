@@ -72,6 +72,17 @@ interface TextLike {
   text: string;
 }
 
+interface Prefix {
+  name: string;
+  value: string;
+  purpose: string;
+}
+
+interface ResourceLink {
+  id: number;
+  value: string;
+}
+
 interface Element {
   id: number;
   center: Point;
@@ -109,6 +120,8 @@ interface VisualGraph {
   featureDefs: FeatureDef[];
   stylists: Stylist[];
   styles: Style[];
+  prefixes: Prefix[];
+  resourceLinks: ResourceLink[];
   elements: Element[];
   relationships: Relationship[];
   views: GraphView[];
@@ -157,6 +170,7 @@ class GraphBuilder {
   aspectIdCounter: number = 0;
   blendingIdCounter: number = 0;
   colorIdCounter: number = 0;
+  resourceLinkIdCounter: number = 0;
   elementIdCounter: number = 0;
   relationshipIdCounter: number = 0;
   viewIdCounter: number = 0;
@@ -169,6 +183,8 @@ class GraphBuilder {
     styles: [],
     blendings: [],
     colors: [],
+    prefixes: [],
+    resourceLinks: [],
     elements: [],
     relationships: [],
     views: [],
@@ -256,6 +272,26 @@ class GraphBuilder {
     this.visualGraph.colors.push(color);
     return color;
   }
+
+  addPrefix(name: string, value: string, purpose: string): Prefix {
+    const prefix: Prefix = {
+      name,
+      value,
+      purpose,
+    };
+    this.visualGraph.prefixes.push(prefix);
+    return prefix;
+  }
+
+  addResourceLink(value: string): ResourceLink {
+    const resLink: ResourceLink = {
+      id: this.resourceLinkIdCounter++,
+      value,
+    };
+    this.visualGraph.resourceLinks.push(resLink);
+    return resLink;
+  }
+
   addRelationship(
     from: Element,
     to: Element,
